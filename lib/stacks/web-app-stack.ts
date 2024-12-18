@@ -1,18 +1,37 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import {
+  AmazonLinuxImage,
+  AmazonLinuxGeneration,
+  Instance,
+  InstanceType,
+  InstanceClass,
+  InstanceSize,
+  IVpc,
+} from 'aws-cdk-lib/aws-ec2';
 
-interface WebAppStackProps extends StackProps {}
+interface WebAppStackProps extends StackProps {
+  vpc: IVpc;
+}
 
-export class WebAppCdkStack extends Stack {
-  constructor(scope: Construct, id: string, props: StackProps) {
+export class WebAppStack extends Stack {
+  readonly webServer: Instance;
+
+  constructor(scope: Construct, id: string, props: WebAppStackProps) {
     super(scope, id, props);
 
     const STACK_RESOURCE_IDENTIFIER = `WebAppStack-${props.env!.region}`;
 
-    // The code that defines your stack goes here
+    // Define EC2 instance linux t2.micro
+    // Load nginx docker image into ECR and deploy, bring task definition onto EC2
+    // Give EC2 instance basic IAM role
 
-    // Define ECS service with one t2.micro instance
-    // Load nginx docker image into ECR and deploy onto Fargate and run
+    const webServerName = `WebServer-${STACK_RESOURCE_IDENTIFIER}`;
+    this.webServer = new Instance(this, webServerName, {
+      vpc: props.vpc,
+      instanceName: 'web-hosting-box',
+      instanceType: InstanceType.of(InstanceClass.T2, InstanceSize.MICRO),
+      machineImage: new AmazonLinuxImage({ generation: AmazonLinuxGeneration.AMAZON_LINUX_2 }),
+    });
   }
 }
